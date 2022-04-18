@@ -6,8 +6,49 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 8f;
-    [SerializeField] private float jumpForce = 5f;
-    [SerializeField] private float gravity = -13f;
+    [SerializeField] private float moveSmoothTime = 0.05f;
+
+    private PlayerInput _input;
+    private Rigidbody _rbody;
+    private CapsuleCollider _collider;
+
+    private Vector2 _currentDirection, _currentDirectionVelocity;
+
+    private void Awake() {
+        _input = new PlayerInput();
+        _rbody = GetComponent<Rigidbody>();
+        _collider = GetComponent<CapsuleCollider>();
+
+        _rbody.freezeRotation = true;
+    }
+
+    private void OnEnable() {
+        _input.Enable();
+    }
+
+    private void OnDisable() {
+        _input.Disable();
+    }
+
+    private void HandleMovement() {
+        Vector2 targetDirection = _input.Player.Movement.ReadValue<Vector2>();
+
+        _currentDirection = Vector2.SmoothDamp(_currentDirection, targetDirection, ref _currentDirectionVelocity, moveSmoothTime);
+    }
+
+    private void Update() {
+        HandleMovement();
+    }
+
+    private void FixedUpdate() {
+        _rbody.MovePosition(_rbody.position + new Vector3(_currentDirection.x, 0, _currentDirection.y) * moveSpeed * Time.fixedDeltaTime);
+    }
+
+    /*
+    [Header("Movement")]
+    [SerializeField] private float moveSpeed = 8f;
+    [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private float gravity = -20f;
     [SerializeField] private float moveSmoothTime = 0.05f;
 
     [Header("Look")]
@@ -81,4 +122,5 @@ public class PlayerController : MonoBehaviour
         _camera.transform.localEulerAngles = Vector3.right * _cameraPitch + Vector3.forward * _currentTilt;
         transform.Rotate(Vector3.up * _currentDelta.x * lookSensitivity);
     }
+    */
 }
