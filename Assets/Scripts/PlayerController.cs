@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour {
     [Header("Camera")]
@@ -14,6 +15,7 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private float moveSmoothTime = 0.05f;
 
     [Header("Dash")]
+    [SerializeField] private Image dashUI;
     [SerializeField] private float dashCooldown = 2f;
     [SerializeField] private float dashFov = 10f;
     [SerializeField] private float dashSpeed = 20;
@@ -37,6 +39,7 @@ public class PlayerController : MonoBehaviour {
     private bool _isDashing = false;
     private bool _dashReady = true;
     private float _nextDashTime = 0;
+    private float _dashDowntime = 1f;
 
     private float _cameraPitch = 0;
     private float _cameraTilt = 0;
@@ -79,8 +82,10 @@ public class PlayerController : MonoBehaviour {
         if (_controller.isGrounded)
             _velocityY = 0.0f;
 
-        if (!_dashReady && _controller.isGrounded && Time.time > _nextDashTime)
+        if (!_dashReady && _controller.isGrounded && _dashDowntime == 1f) {
             _dashReady = true;
+            dashUI.color = new Color32(255, 255, 255, 128);
+        }
 
         if (_input.Player.Jump.IsPressed() && _controller.isGrounded)
             _velocityY += Mathf.Sqrt(jumpHeight * -2f * (gravity * gravityScale));
@@ -96,8 +101,10 @@ public class PlayerController : MonoBehaviour {
 
     IEnumerator Dash(Vector2 direction) {
         float startTime = Time.time;
+        _dashDowntime = 0;
         _dashReady = false;
         _isDashing = true;
+        dashUI.color = new Color32(128, 128, 128, 128);
         while(Time.time < startTime + dashTime) {
             direction = direction.normalized;
             Vector3 dashVelocity = (transform.forward * direction.y + transform.right * direction.x) * dashSpeed;
@@ -121,6 +128,12 @@ public class PlayerController : MonoBehaviour {
 
         _currentFov = Mathf.SmoothDamp(_currentFov, (_isDashing ? fov + dashFov : fov), ref _currentFovVelocity, fovSmoothTime);
         _camera.fieldOfView = _currentFov;
+
+        if(!_isDashing) {
+            _dashDowntime += Time.deltaTime / dashCooldown;
+            _dashDowntime = Mathf.Clamp(_dashDowntime, 0, 1f);
+        }
+        dashUI.fillAmount = _dashDowntime;
 
         _camera.transform.localEulerAngles = Vector3.right * _cameraPitch + Vector3.forward * _currentTilt;
         transform.Rotate(Vector3.up * _currentDelta.x * lookSensitivity);
