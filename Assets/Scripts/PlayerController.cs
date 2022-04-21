@@ -56,6 +56,7 @@ public class PlayerController : MonoBehaviour {
         _input = new PlayerInput();
 
         _camera.fieldOfView = fov;
+        _currentFov = fov;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
