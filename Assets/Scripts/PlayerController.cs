@@ -8,6 +8,12 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private float fov = 60f;
     [SerializeField] private float fovSmoothTime = 0.15f;
 
+    [Header("Shoot")]
+    [SerializeField] private float projectileRate = 1f;
+    [SerializeField] private float projectileSpeed = 5f;
+    [SerializeField] private Transform projectileSpawn;
+    [SerializeField] private GameObject projectilePrefab;
+
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 8f;
     [SerializeField] private float airSpeed = 10f;
@@ -38,8 +44,10 @@ public class PlayerController : MonoBehaviour {
 
     private bool _isDashing = false;
     private bool _dashReady = true;
-    private float _nextDashTime = 0;
     private float _dashDowntime = 1f;
+
+    private float _projectileTime = 0;
+    private Vector3 _projectileDestination;
 
     private float _cameraPitch = 0;
     private float _cameraTilt = 0;
@@ -112,7 +120,6 @@ public class PlayerController : MonoBehaviour {
             _controller.Move(dashVelocity * Time.deltaTime);
             yield return null;
         }
-        _nextDashTime = Time.time + dashCooldown;
         _isDashing = false;
     }
 
@@ -130,6 +137,11 @@ public class PlayerController : MonoBehaviour {
         _currentFov = Mathf.SmoothDamp(_currentFov, (_isDashing ? fov + dashFov : fov), ref _currentFovVelocity, fovSmoothTime);
         _camera.fieldOfView = _currentFov;
 
+        if(_input.Player.Action.IsPressed() && Time.time >= _projectileTime) {
+            _projectileTime = Time.time + 1f / projectileRate;
+            ShootProjectile();
+        }
+
         if(!_isDashing) {
             _dashDowntime += Time.deltaTime / dashCooldown;
             _dashDowntime = Mathf.Clamp(_dashDowntime, 0, 1f);
@@ -138,5 +150,19 @@ public class PlayerController : MonoBehaviour {
 
         _camera.transform.localEulerAngles = Vector3.right * _cameraPitch + Vector3.forward * _currentTilt;
         transform.Rotate(Vector3.up * _currentDelta.x * lookSensitivity);
+    }
+
+    private void ShootProjectile() {
+        Ray projectileRay = _camera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit projectileHit;
+
+        if (Physics.Raycast(projectileRay, out projectileHit)) {
+            _projectileDestination = projectileHit.point;
+        } else {
+            _projectileDestination = projectileRay.GetPoint(1000);
+        }
+
+        GameObject projectile = Instantiate(projectilePrefab, projectileSpawn.position, _camera.transform.rotation);
+        projectile.GetComponent<Rigidbody>().velocity = (_projectileDestination - projectileSpawn.position).normalized * projectileSpeed;
     }
 }
