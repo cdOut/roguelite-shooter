@@ -786,6 +786,7 @@ MonoBehaviour:
   fovSmoothTime: 0.15
   projectileRate: 25
   projectileSpeed: 50
+  projectileSway: 5
   projectileLayer:
     serializedVersion: 2
     m_Bits: 128

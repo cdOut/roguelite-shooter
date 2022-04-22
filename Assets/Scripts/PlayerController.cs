@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour {
     [Header("Shoot")]
     [SerializeField] private float projectileRate = 1f;
     [SerializeField] private float projectileSpeed = 5f;
+    [SerializeField] private float projectileSway = 5f;
     [SerializeField] private LayerMask projectileLayer;
     [SerializeField] private Transform projectileSpawn;
     [SerializeField] private GameObject projectilePrefab;
@@ -163,9 +164,8 @@ public class PlayerController : MonoBehaviour {
             _projectileDestination = projectileRay.GetPoint(1000);
         }
 
-        Debug.Log(_projectileDestination);
-
         GameObject projectile = Instantiate(projectilePrefab, projectileSpawn.position, _camera.transform.rotation);
-        projectile.GetComponent<Rigidbody>().velocity = (_projectileDestination - projectileSpawn.position).normalized * projectileSpeed;
+        Vector3 projectileOffset = new Vector3(Random.Range(-projectileSway * 10f, projectileSway * 10f), Random.Range(-projectileSway * 10f, projectileSway * 10f), Random.Range(-projectileSway * 10f, projectileSway * 10f));
+        projectile.GetComponent<Rigidbody>().velocity = (_projectileDestination - projectileSpawn.position + projectileOffset).normalized * projectileSpeed;
     }
 }
