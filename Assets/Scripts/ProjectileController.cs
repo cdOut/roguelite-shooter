@@ -12,6 +12,10 @@ public class ProjectileController : MonoBehaviour
     }
 
     private void OnCollisionEnter(Collision collision) {
+        MonsterCore monsterStats = collision.gameObject.GetComponent<MonsterCore>();
+        if (monsterStats != null)
+            monsterStats.DealDamage(1f);
+
         Destroy(gameObject);
     }
 }
